@@ -1,197 +1,199 @@
-import React, { useState } from 'react';
-import styled, { keyframes } from 'styled-components';
+import React, { useEffect, useState } from 'react';
+import styled from 'styled-components';
 import { crawlUrl, askQuery } from '../../utils/networkUtils';
 import ErrorModal from '../../shared/ErrorModal';
 
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-`;
-
-const CrawlContainer = styled.div`
-  max-width: 600px;
-  margin: 0 auto;
+const CrawlerAndQuerierContainer = styled.div`
+  background-color: floralwhite;
   padding: 20px;
-  background-color: #f0f0f0;
-  border-radius: 10px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  width: 60%;
+  margin: 0 auto;
 `;
 
 const Title = styled.h1`
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #333;
-`;
-
-const TabContainer = styled.div`
-  display: flex;
-  margin-bottom: 20px;
-`;
-
-const Tab = styled.div`
-  flex: 1;
-  padding: 10px;
   text-align: center;
-  background-color: ${(props) => (props.active ? '#007bff' : '#ccc')};
-  color: ${(props) => (props.active ? '#fff' : '#000')};
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  margin-bottom: 20px;
+`;
 
+const CrawlerAndQuerierTabs = styled.div`
+  display: flex;
+`;
+
+const Tab = styled.button`
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #ddd;
+  color: black;
+  cursor: pointer;
   &:hover {
-    background-color: ${(props) => (props.active ? '#0056b3' : '#ddd')};
+    background-color: #ccc;
+  }
+  &.active {
+    background-color: #4caf50;
+    color: white;
   }
 `;
 
-const Section = styled.div`
-  display: ${(props) => (props.active ? 'block' : 'none')};
-  animation: ${fadeIn} 0.5s ease;
+const TabContent = styled.div`
+  flex: 1;
+  padding: 10px;
 `;
 
-const Input = styled.input`
-  width: calc(100% - 80px);
-  padding: 8px;
-  margin-bottom: 10px;
+const TextArea = styled.textarea`
+  width: 100%; /* Inherit full width from parent */
+  padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  font-size: 16px;
+  resize: none;
+  margin-bottom: 10px;
+`;
+
+const MainContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: cornsilk;
 `;
 
 const Button = styled.button`
-  padding: 8px 20px;
-  background-color: #007bff;
-  color: #fff;
+  padding: 10px 20px;
   border: none;
-  cursor: ${(props) =>
-    !(props.urlInput || props.queryText) ? 'not-allowed' : 'pointer'};
   border-radius: 5px;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: #0056b3;
-  }
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+`;
+const ResponseBox = styled.div`
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
 `;
 
-function Crawler() {
-  const [activeTab, setActiveTab] = useState('crawl');
-  const [urlInput, setUrlInput] = useState('');
-  const [crawlResult, setCrawlResult] = useState('');
-  const [askQueryResult, setAskQueryResult] = useState('');
-  const [queryText, setQueryText] = useState('');
+const CrawlerAndQuerier = () => {
+  const [activeKey, setActiveKey] = useState('crawlUrl'); // Initial active tab key
+  const [url, setUrl] = useState(''); // State to store the URL
   const [error, setError] = useState('');
+  const [question, setQuestion] = useState('');
+  const [response, setResponse] = useState(null);
+  const [crawlResult, setCrawlResult] = useState('');
 
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
+  useEffect(() => {
+    console.log(response);
+  }, [response]);
+
+  const handleTabChange = (key) => {
+    setActiveKey(key);
   };
 
+  const handleCrawlUrl = (event) => {
+    setUrl(event.target.value);
+  };
   const closeErrorModal = () => {
     setError('');
-    setUrlInput('');
-    setQueryText('');
-    setCrawlResult('');
   };
 
-  const handleCrawl = async () => {
-    if (urlInput) {
+  // Implement functions for crawling the URL based on your requirements (replace with your logic)
+  const crawlThisUrl = async () => {
+    console.log('Crawling URL:', url);
+    if (url !== '') {
       try {
-        const res = await crawlUrl({ url: urlInput });
-        if (res && res.data && res.data.ok && res.data.data) {
+        const res = await crawlUrl({ url });
+        if (res && res.data && res.data.ok) {
           setCrawlResult(res.data.data);
         } else {
           setError(res.data.err);
         }
       } catch (err) {
+        console.error('Failed Crawling', err);
         setError('Something went wrong');
       }
     }
   };
 
-  const handleQuery = async () => {
-    console.log('inside query', queryText);
-    if (queryText) {
+  const handleQueryText = (event) => {
+    setQuestion(event.target.value);
+  };
+
+  const queryOnQuestion = async () => {
+    if (question !== '') {
       try {
-        const res = await askQuery({ question: queryText });
-        if (res && res.data && res.data.ok && res.data.data) {
-          setAskQueryResult(res.data.data);
+        const res = await askQuery({ question });
+        if (res && res.data && res.data.ok) {
+          setResponse(res.data.data);
         } else {
           setError(res.data.err);
         }
       } catch (err) {
+        console.error('No response to query', err);
         setError('Something went wrong');
       }
     }
   };
 
   return (
-    <CrawlContainer>
-      <Title>URL Crawler and Text Query</Title>
+    <MainContainer>
+      <CrawlerAndQuerierContainer>
+        <Title>Web Crawler</Title>
+        <CrawlerAndQuerierTabs>
+          <Tab
+            className={activeKey === 'crawlUrl' ? 'active' : ''}
+            onClick={() => handleTabChange('crawlUrl')}
+          >
+            Crawl URL
+          </Tab>
+          <Tab
+            className={activeKey === 'queryText' ? 'active' : ''}
+            onClick={() => handleTabChange('queryText')}
+          >
+            Query Text
+          </Tab>
+        </CrawlerAndQuerierTabs>
+        <TabContent>
+          {activeKey === 'crawlUrl' && (
+            <>
+              <TextArea
+                placeholder='Enter URL to Crawl'
+                rows={4}
+                value={url}
+                onChange={handleCrawlUrl}
+              />
+              <Button onClick={crawlThisUrl}>Crawl URL</Button>
+              {crawlResult && (
+                <ResponseBox>
+                  <p>{crawlResult}</p>
+                </ResponseBox>
+              )}
+            </>
+          )}
+          {activeKey === 'queryText' && (
+            <>
+              <TextArea
+                placeholder='Enter Query Text'
+                rows={4}
+                onChange={handleQueryText}
+              />
+              <Button onClick={queryOnQuestion}>Ask Question</Button>
+              {response && (
+                <ResponseBox>
+                  <p>Answer:</p>
+                  <p>{response}</p>
+                </ResponseBox>
+              )}
+            </>
+          )}
+        </TabContent>
 
-      <TabContainer>
-        <Tab
-          active={activeTab === 'crawl'}
-          onClick={() => handleTabClick('crawl')}
-        >
-          Crawl URL
-        </Tab>
-        <Tab
-          active={activeTab === 'query'}
-          onClick={() => handleTabClick('query')}
-        >
-          Query Text
-        </Tab>
-      </TabContainer>
-
-      <Section active={activeTab === 'crawl'}>
-        <Input
-          type='text'
-          placeholder='Enter URL'
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-        />
-        <Button
-          urlInput={urlInput.trim()}
-          disabled={!urlInput.trim()}
-          onClick={handleCrawl}
-        >
-          Crawl
-        </Button>
-      </Section>
-
-      <Section active={activeTab === 'query'}>
-        <Input
-          type='text'
-          placeholder='Enter text to query'
-          value={queryText}
-          onChange={(e) => setQueryText(e.target.value)}
-        />
-        <Button
-          urlInput={queryText.trim()}
-          disabled={!queryText.trim()}
-          onClick={handleQuery}
-        >
-          Query
-        </Button>
-      </Section>
-      {crawlResult && (
-        <ErrorModal
-          title={''}
-          text={'Successfully crawled the URL'}
-          isError={false}
-          customAction={closeErrorModal}
-        />
-      )}
-      {askQueryResult && (
-        <ErrorModal
-          title={''}
-          text={askQueryResult}
-          isError={false}
-          customAction={closeErrorModal}
-        />
-      )}
-      {error && <ErrorModal text={error} customAction={closeErrorModal} />}
-    </CrawlContainer>
+        {error && <ErrorModal text={error} customAction={closeErrorModal} />}
+      </CrawlerAndQuerierContainer>
+    </MainContainer>
   );
-}
+};
 
-export default Crawler;
+export default CrawlerAndQuerier;
