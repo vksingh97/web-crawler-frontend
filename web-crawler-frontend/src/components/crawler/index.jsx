@@ -84,10 +84,6 @@ const CrawlerAndQuerier = () => {
   const [response, setResponse] = useState(null);
   const [crawlResult, setCrawlResult] = useState('');
 
-  useEffect(() => {
-    console.log(response);
-  }, [response]);
-
   const handleTabChange = (key) => {
     setActiveKey(key);
   };
